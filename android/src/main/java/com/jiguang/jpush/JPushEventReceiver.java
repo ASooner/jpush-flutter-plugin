@@ -28,11 +28,42 @@ public class JPushEventReceiver extends JPushMessageReceiver {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                JPushPlugin.onNotifyMessageUnShow(notificationMessage);
+                JPushHelper.getInstance().onNotifyMessageUnShow(notificationMessage);
+            }
+        });
+    }
+    @Override
+    public void onConnected(Context context,final boolean isConnected) {
+        //连接状态
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                JPushHelper.getInstance().onConnected(isConnected);
             }
         });
     }
 
+    @Override
+    public void onInAppMessageShow(Context context,final NotificationMessage message) {
+        Log.i("JPushPlugin", "[onInAppMessageShow], " + message.toString());
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                JPushHelper.getInstance().onInAppMessageShow(message);
+            }
+        });
+    }
+
+    @Override
+    public void onInAppMessageClick(Context context,final NotificationMessage message) {
+        Log.i("JPushPlugin", "[onInAppMessageClick], " + message.toString());
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                JPushHelper.getInstance().onInAppMessageClick(message);
+            }
+        });
+    }
     @Override
     public void onTagOperatorResult(Context context, final JPushMessage jPushMessage) {
         super.onTagOperatorResult(context, jPushMessage);
@@ -46,7 +77,7 @@ public class JPushEventReceiver extends JPushMessageReceiver {
             e.printStackTrace();
         }
 
-        final Result callback = JPushPlugin.instance.callbackMap.get(sequence);//instance.eventCallbackMap.get(sequence);
+        final Result callback = JPushHelper.getInstance().getCallback(sequence);//instance.eventCallbackMap.get(sequence);
 
         if (callback == null) {
             Log.i("JPushPlugin", "Unexpected error, callback is null!");
@@ -71,7 +102,7 @@ public class JPushEventReceiver extends JPushMessageReceiver {
                     callback.error(Integer.toString(jPushMessage.getErrorCode()), "", "");
                 }
 
-                JPushPlugin.instance.callbackMap.remove(sequence);
+                JPushHelper.getInstance().removeCallback(sequence);
             }
         });
 
@@ -88,7 +119,7 @@ public class JPushEventReceiver extends JPushMessageReceiver {
         final int sequence = jPushMessage.getSequence();
 
 
-        final Result callback = JPushPlugin.instance.callbackMap.get(sequence);
+        final Result callback = JPushHelper.getInstance().getCallback(sequence);;
 
         if (callback == null) {
             Log.i("JPushPlugin", "Unexpected error, callback is null!");
@@ -109,7 +140,7 @@ public class JPushEventReceiver extends JPushMessageReceiver {
                     callback.error(Integer.toString(jPushMessage.getErrorCode()), "", "");
                 }
 
-                JPushPlugin.instance.callbackMap.remove(sequence);
+                JPushHelper.getInstance().removeCallback(sequence);
             }
         });
     }
@@ -120,7 +151,8 @@ public class JPushEventReceiver extends JPushMessageReceiver {
 
         final int sequence = jPushMessage.getSequence();
 
-        final Result callback = JPushPlugin.instance.callbackMap.get(sequence);
+
+        final Result callback = JPushHelper.getInstance().getCallback(sequence);;
 
         if (callback == null) {
             Log.i("JPushPlugin", "Unexpected error, callback is null!");
@@ -139,7 +171,7 @@ public class JPushEventReceiver extends JPushMessageReceiver {
                     callback.error(Integer.toString(jPushMessage.getErrorCode()), "", "");
                 }
 
-                JPushPlugin.instance.callbackMap.remove(sequence);
+                JPushHelper.getInstance().removeCallback(sequence);
             }
         });
     }
@@ -151,6 +183,6 @@ public class JPushEventReceiver extends JPushMessageReceiver {
 
         HashMap<String, Object> map = new HashMap();
         map.put("isEnabled",isOn);
-        JPushPlugin.instance.runMainThread(map,null,"onReceiveNotificationAuthorization");
+        JPushHelper.getInstance().runMainThread(map,null,"onReceiveNotificationAuthorization");
     }
 }

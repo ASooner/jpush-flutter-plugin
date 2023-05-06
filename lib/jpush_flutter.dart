@@ -26,6 +26,9 @@ class JPush {
   EventHandler? _onReceiveMessage;
   EventHandler? _onReceiveNotificationAuthorization;
   EventHandler? _onNotifyMessageUnShow;
+  EventHandler? _onConnected;
+  EventHandler? _onInAppMessageClick;
+  EventHandler? _onInAppMessageShow;
   void setup({
     String appKey = '',
     bool production = false,
@@ -52,6 +55,13 @@ class JPush {
     _channel.invokeMethod('setWakeEnable', {'enable': enable});
   }
 
+  void enableAutoWakeup({bool enable = false}) {
+    if (_platform.isIOS) {
+      return;
+    }
+    _channel.invokeMethod('enableAutoWakeup', {'enable': enable});
+  }
+
   void setAuth({bool enable = true}) {
     print(flutter_log + "setAuth:");
     _channel.invokeMethod('setAuth', {'enable': enable});
@@ -66,6 +76,9 @@ class JPush {
     EventHandler? onReceiveMessage,
     EventHandler? onReceiveNotificationAuthorization,
     EventHandler? onNotifyMessageUnShow,
+    EventHandler? onConnected,
+    EventHandler? onInAppMessageClick,
+    EventHandler? onInAppMessageShow,
   }) {
     print(flutter_log + "addEventHandler:");
 
@@ -74,6 +87,9 @@ class JPush {
     _onReceiveMessage = onReceiveMessage;
     _onReceiveNotificationAuthorization = onReceiveNotificationAuthorization;
     _onNotifyMessageUnShow = onNotifyMessageUnShow;
+    _onConnected = onConnected;
+    _onInAppMessageClick = onInAppMessageClick;
+    _onInAppMessageShow = onInAppMessageShow;
     _channel.setMethodCallHandler(_handleMethod);
   }
 
@@ -92,6 +108,12 @@ class JPush {
             call.arguments.cast<String, dynamic>());
       case "onNotifyMessageUnShow":
         return _onNotifyMessageUnShow!(call.arguments.cast<String, dynamic>());
+      case "onConnected":
+        return _onConnected!(call.arguments.cast<String, dynamic>());
+      case "onInAppMessageClick":
+        return _onInAppMessageClick!(call.arguments.cast<String, dynamic>());
+      case "onInAppMessageShow":
+        return _onInAppMessageShow!(call.arguments.cast<String, dynamic>());
       default:
         throw new UnsupportedError("Unrecognized Event");
     }
@@ -110,6 +132,26 @@ class JPush {
     }
 
     _channel.invokeMethod('applyPushAuthority', iosSettings.toMap());
+  }
+
+  // iOS Only
+  // 进入页面， pageName：页面名  请与pageLeave配套使用
+  void pageEnterTo(String pageName) {
+    print(flutter_log + "pageEnterTo:" + pageName);
+    if (!_platform.isIOS) {
+      return;
+    }
+    _channel.invokeMethod('pageEnterTo', pageName);
+  }
+
+  // iOS Only
+  // 离开页面，pageName：页面名， 请与pageEnterTo配套使用
+  void pageLeave(String pageName) {
+    print(flutter_log + "pageLeave:" + pageName);
+    if (!_platform.isIOS) {
+      return;
+    }
+    _channel.invokeMethod('pageLeave', pageName);
   }
 
   ///

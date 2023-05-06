@@ -1,3 +1,14 @@
+## 2.4.4
++ 修复：优化代码结构
+## 2.4.3
++ 升级：升级 Android+IOS JPush 5.0.0
+       升级 Android+IOS JCore 4.2.0
+ + 新增：enableAutoWakeup API
+## 2.4.2 
+开放 onConnected 回调
+## 2.4.1
++ 升级：升级 Android JPush 4.9.0
+       升级 Android JCore 4.1.0
 ## 2.4.0
 + 升级：升级 Android JPush 4.8.4
 ## 2.3.9

@@ -45,6 +45,20 @@ class JPush {
     });
   }
 
+  void setChannelAndSound({
+    String channel = '',
+    String channelID = '',
+    String sound = '',
+  }) {
+    if (_platform.isIOS) {
+      return;
+    }
+    print(flutter_log + "setChannelAndSound:");
+
+    _channel.invokeMethod('setChannelAndSound',
+        {'channel': channel, 'channel_id': channelID, 'sound': sound});
+  }
+
   //APP活跃在前台时是否展示通知
   void setUnShowAtTheForeground({bool unShow = false}) {
     print(flutter_log + "setUnShowAtTheForeground:");
@@ -65,6 +79,14 @@ class JPush {
   void setAuth({bool enable = true}) {
     print(flutter_log + "setAuth:");
     _channel.invokeMethod('setAuth', {'enable': enable});
+  }
+
+  void setLbsEnable({bool enable = true}) {
+    if (_platform.isIOS) {
+      return;
+    }
+    print(flutter_log + "setLbsEnable:");
+    _channel.invokeMethod('setLbsEnable', {'enable': enable});
   }
 
   ///
@@ -316,6 +338,14 @@ class JPush {
     await _channel.invokeMethod('clearAllNotifications');
   }
 
+  Future clearLocalNotifications() async {
+    if (_platform.isIOS) {
+      return;
+    }
+    print(flutter_log + "clearLocalNotifications:");
+    await _channel.invokeMethod('clearLocalNotifications');
+  }
+
   ///
   /// 清空通知栏上某个通知
   /// @param notificationId 通知 id，即：LocalNotification id
@@ -375,6 +405,13 @@ class JPush {
   /// 调用此 API 跳转至系统设置中应用设置界面
   void openSettingsForNotification() {
     _channel.invokeMethod('openSettingsForNotification');
+  }
+
+  void requestRequiredPermission() {
+    if (_platform.isIOS) {
+      return;
+    }
+    _channel.invokeMethod('requestRequiredPermission');
   }
 }
 

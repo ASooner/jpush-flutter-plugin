@@ -1,8 +1,13 @@
 package com.jiguang.jpush;
 
+import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +30,8 @@ import cn.jpush.android.api.JPushInterface;
 import cn.jpush.android.api.NotificationMessage;
 import cn.jpush.android.data.JPushLocalNotification;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
@@ -33,9 +40,10 @@ import io.flutter.plugin.common.MethodChannel.Result;
 /**
  * JPushPlugin
  */
-public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
+public class JPushPlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
     private static String TAG = "| JPUSH | Flutter | Android | ";
     private Context context;
+    private Activity mActivity;
     private int sequence;
     public JPushPlugin() {
         this.sequence = 0;
@@ -49,8 +57,26 @@ public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
         JPushHelper.getInstance().setMethodChannel(channel);
         JPushHelper.getInstance().setContext(context);
     }
+    @Override
+    public void onAttachedToActivity(ActivityPluginBinding activityPluginBinding) {
+        if(activityPluginBinding!=null){
+            mActivity = activityPluginBinding.getActivity();
+        }
+    }
 
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
 
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding activityPluginBinding) {
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+
+    }
     @Override
     public void onDetachedFromEngine(FlutterPluginBinding binding) {
         MethodChannel  channel =JPushHelper.getInstance().getChannel();
@@ -90,6 +116,8 @@ public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
             resumePush(call, result);
         } else if (call.method.equals("clearAllNotifications")) {
             clearAllNotifications(call, result);
+        }else if (call.method.equals("clearLocalNotifications")) {
+            clearLocalNotifications(call, result);
         } else if (call.method.equals("clearNotification")) {
             clearNotification(call, result);
         } else if (call.method.equals("getLaunchAppNotification")) {
@@ -112,9 +140,56 @@ public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
             testCountryCode(call, result);
         }else if (call.method.equals("enableAutoWakeup")) {
             enableAutoWakeup(call, result);
+        } else if (call.method.equals("setLbsEnable")) {
+            setLbsEnable(call, result);
+        }else if (call.method.equals("setChannelAndSound")) {
+            setChannelAndSound(call, result);
+        }else if (call.method.equals("requestRequiredPermission")) {
+            requestRequiredPermission(call, result);
         } else {
             result.notImplemented();
         }
+    }
+    public void requestRequiredPermission(MethodCall call, Result result){
+        JPushInterface.requestRequiredPermission(mActivity);
+    }
+    public void setChannelAndSound(MethodCall call, Result result) {
+        HashMap<String, Object> readableMap = call.arguments();
+        if (readableMap == null) {
+            return;
+        }
+        String channel = (String)readableMap.get("channel");
+        String channelId = (String)readableMap.get("channel_id");
+        String sound = (String)readableMap.get("sound");
+        try {
+            NotificationManager manager= (NotificationManager) context.getSystemService("notification");
+            if(Build.VERSION.SDK_INT<26){
+                return;
+            }
+            if(TextUtils.isEmpty(channel)||TextUtils.isEmpty(channelId)){
+                return;
+            }
+            NotificationChannel channel1=new NotificationChannel(channelId,channel, NotificationManager.IMPORTANCE_HIGH);
+            if(!TextUtils.isEmpty(sound)){
+                channel1.setSound(Uri.parse("android.resource://"+context.getPackageName()+"/raw/"+sound),null);
+            }
+            manager.createNotificationChannel(channel1);
+            JPushInterface.setChannel(context,channel);
+            Log.d(TAG,"setChannelAndSound channelId="+channelId+" channel="+channel+" sound="+sound);
+
+        }catch (Throwable throwable){
+        }
+    }
+    private void setLbsEnable(MethodCall call, Result result) {
+        HashMap<String, Object> map = call.arguments();
+        if (map == null) {
+            return;
+        }
+        Boolean enable = (Boolean) map.get("enable");
+        if (enable == null) {
+            enable = true;
+        }
+        JPushInterface.setLbsEnable(context,enable);
     }
 
     private void setAuth(MethodCall call, Result result){
@@ -131,7 +206,7 @@ public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
     private void testCountryCode(MethodCall call, Result result){
         String code = call.arguments();
         Log.d(TAG,"testCountryCode code="+code);
-        JCoreInterface.testCountryCode(code);
+        JCoreInterface.testCountryCode(context,code);
     }
     private void setWakeEnable(MethodCall call, Result result) {
         HashMap<String, Object> map = call.arguments();
@@ -269,7 +344,10 @@ public class JPushPlugin implements FlutterPlugin, MethodCallHandler {
 
         JPushInterface.clearAllNotifications(context);
     }
-
+    public void clearLocalNotifications(MethodCall call, Result result) {
+        Log.d(TAG, "clearLocalNotifications: ");
+        JPushInterface.clearLocalNotifications(context);
+    }
     public void clearNotification(MethodCall call, Result result) {
         Log.d(TAG, "clearNotification: ");
         Object id = call.arguments;

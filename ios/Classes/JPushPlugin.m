@@ -3,8 +3,8 @@
 #import <UserNotifications/UserNotifications.h>
 #endif
 
-#import <JPush/JPUSHService.h>
-#import <JCore/JGInforCollectionAuth.h>
+#import "JPUSHService.h"
+#import "JGInforCollectionAuth.h"
 
 #define JPLog(fmt, ...) NSLog((@"| JPUSH | Flutter | iOS | " fmt), ##__VA_ARGS__)
 
@@ -149,7 +149,7 @@ static NSMutableArray<FlutterResult>* getRidResults;
     } else if([@"stopPush" isEqualToString:call.method]) {
         [self stopPush:call result:result];
     } else if([@"resumePush" isEqualToString:call.method]) {
-        JPLog(@"ios platform not support resume push.");
+        [self resumePush:call result:result];
         //[self applyPushAuthority:call result:result];
     } else if([@"clearAllNotifications" isEqualToString:call.method]) {
         [self clearAllNotifications:call result:result];
@@ -352,6 +352,12 @@ static NSMutableArray<FlutterResult>* getRidResults;
     JPLog(@"stopPush:");
     [[UIApplication sharedApplication] unregisterForRemoteNotifications];
 }
+
+- (void)resumePush:(FlutterMethodCall*)call result:(FlutterResult)result {
+    JPLog(@"resumePush:");
+    [[UIApplication sharedApplication] registerForRemoteNotifications];
+}
+
 - (void)clearAllNotifications:(FlutterMethodCall*)call result:(FlutterResult)result {
     JPLog(@"clearAllNotifications:");
     
@@ -442,6 +448,11 @@ static NSMutableArray<FlutterResult>* getRidResults;
     
     if (params[@"soundName"] && ![params[@"soundName"] isEqualToString:@"<null>"]) {
         content.sound = params[@"soundName"];
+    }
+    
+    if (@available(iOS 15.0, *)) {
+      content.interruptionLevel = UNNotificationInterruptionLevelActive;
+      content.relevanceScore = 1;
     }
     
     JPushNotificationTrigger *trigger = [[JPushNotificationTrigger alloc] init];

@@ -17,6 +17,6 @@ A new flutter plugin project.
   s.dependency 'Flutter'
   s.dependency 'JCore','4.4.0-noidfa'
   s.dependency 'JPush','5.2.0'
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '13.0'
   s.static_framework = true
 end
